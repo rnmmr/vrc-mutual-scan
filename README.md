@@ -1,6 +1,6 @@
 # vrc-mutual-scan
 批量扫描共同好友并导出的油猴脚本
-[安装](https://github.com/rnmmr/vrc-mutual-scan/raw/refs/heads/main/vrc-mutual-scan.user.js)
+[安装](https://github.com/rnmmr/vrc-mutual-scan/raw/refs/heads/main/vrc-mutual-scan.user.js){target="_blank"}
 
 ## 如何使用
-在VRCX用json格式复制好友列表，在本地新建一个txt或者json格式的文件把复制的内容粘贴进去，打开[VRC网页主页](https://vrchat.com/home)，左上角即可以看到工具菜单，点击导入将刚才创建的文件导入进去，等待扫描完成后导出即可，请保持VRC网页在前台运行
+在VRCX用json格式复制好友列表，在本地新建一个txt或者json格式的文件把复制的内容粘贴进去，打开[VRC网页主页](https://vrchat.com/home){:target="_blank"}，左上角即可以看到工具菜单，点击导入将刚才创建的文件导入进去，等待扫描完成后导出即可，请保持VRC网页在前台运行
