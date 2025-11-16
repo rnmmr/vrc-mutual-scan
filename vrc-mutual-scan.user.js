@@ -4,7 +4,7 @@
 // @version      0.0.1
 // @description  扫描共同好友并保存
 // @author       mmr
-// @match        https://vrchat.com/home/profile
+// @match        https://vrchat.com/home
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=vrchat.com
 // @grant        GM_getValue
 // @grant        GM_setValue
