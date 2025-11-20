@@ -47,7 +47,7 @@
     </div>
     <div style="display: flex;flex-direction: row; margin-top: 5px">
         <label class="dbox dhover" for="dbtniff">导入扫描列表</label>
-        <input type="file" id="dbtniff" accept=".txt,.json" style="display: none;">
+        <input type="file" id="dbtniff" accept=".txt,.csv" style="display: none;">
     </div>
     <div style="display: flex;flex-direction: row; margin-top: 5px">
         <!--button class="dbox dhover" style="margin-right: 5px;" onclick="offlist()">从好友列表导入(好麻烦懒得写了，VRC的API不能直接获取整个好友列表，还要分在线离线分批获取)</button-->
@@ -86,10 +86,10 @@
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     const content = e.target.result;
-                    unsafeWindow.flist = xflist(JSON.parse(content));
+                    unsafeWindow.flist = xcflist(content);
 //                    console.log(unsafeWindow.flist);
                     const total = unsafeWindow.flist.length;
-                    document.getElementById("scani").innerText = `0/${total}`;
+                    document.getElementById("scani").innerText = `0/${total} 已导入好友列表`;
                 };
                 reader.readAsText(file);
             }
@@ -174,11 +174,11 @@ async function offlist() {  //有点太麻烦了懒得写了
         await new Promise(r => setTimeout(r, 2000));
     }
     unsafeWindow.flist = fres;
-    document.getElementById("scani").innerText = `0/${fres.length}`;
+    document.getElementById("scani").innerText = `0/${fres.length} 已导入好友列表`;
     return fres;
 }
 
-function xflist(s) {
+function xjflist(s) {
     try {
         let res = s.friends
         return res;
@@ -186,6 +186,16 @@ function xflist(s) {
         console.log("解析VRCX好友列表失败", e);
         return [];
     }
+}
+
+function xcflist(s) {
+    let line = s.split("\n");
+    let res = [];
+    for (let i = 1; i < line.length; i++) {
+        res.push(line[i].split(",").slice(0,2));
+    }
+    console.log(res);
+    return res;
 }
 
 async function scanm(input) {
@@ -197,32 +207,41 @@ async function scanm(input) {
             dbinit();
         }};
     let total = l.length;
-    document.getElementById("scani").innerText = `0/${total}`;
+    document.getElementById("scani").innerText = `0/${total} 扫描中...`;
+    let errmsg = "";
     for (let i = 0; i < l.length; i++) {
-        const u = l[i];
+        const u = l[i][0];
         try {
-            document.getElementById("scani").innerText = `${i+1}/${total}`;
+            document.getElementById("scani").innerText = `${i+1}/${total} 扫描中...`;
             const res = await fetch(`https://vrchat.com/api/1/users/${u}/mutuals/friends`, {
                 method: 'GET',
                 credentials: 'include'
             });
             if (!res.ok) {
                 console.warn('连接失败，可能被墙了', res.status, u);
-                continue;
+                document.getElementById("scani").innerText = `${i+1}/${total} 扫描中断，可能被ban了`;
+                break;
             }
-            const fmlist = await res.json();
-//            console.log(i+1, u, fmlist);
-            dbadd({ user: u, mutuals: fmlist });
+            const fmdata = await res.json();
+//            console.log(i+1, l[i][1], fmdata);
+            dbadd({ user: u, displayname: l[i][1] ,mutuals: fmdata });
             await new Promise(r => setTimeout(r, 2000));
         } catch (e) {
             console.log("这里爆了", i, u, e);
+            errmsg = `${i+1}/${total} 扫描中断，发生错误`;
             break;
         }
     }
+    if (errmsg == "") {
+        errmsg = `${total}/${total} 扫描完成`;
+    }
+    document.getElementById("scani").innerText = errmsg;
+    errmsg = "";
 }
 
+
 unsafeWindow.scanm = scanm;
-unsafeWindow.xflist = xflist;
+unsafeWindow.xflist = xjflist;
 unsafeWindow.dbinit = dbinit;
 unsafeWindow.dbadd = dbadd;
 unsafeWindow.dbshow = dbshow;
