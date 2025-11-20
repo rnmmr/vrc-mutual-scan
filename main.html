@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="VRC好友关系网" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            font-family: Arial, sans-serif;
+        }
+
+        .dbox {
+            flex-direction: column;
+            height: auto;
+            background: rgb(7, 36, 43);
+            border: 2px solid rgb(5, 60, 72);
+            color: rgb(106, 227, 249);
+            display: flex;
+            place-content: start space-between;
+            -webkit-box-align: center;
+            align-items: center;
+            -webkit-box-pack: justify;
+            border-radius: 8px !important;
+            box-shadow: none !important;
+            padding: 0px 7px !important;
+            transition: all 0.2s ease 0s;
+        }
+
+        .dhover:hover {
+            transition: all 0.2s ease 0s;
+            background: rgb(7, 52, 63);
+            border-color: rgb(8, 108, 132);
+        }
+    </style>
+</head>
+
+<body>
+    <div id="dtop" style="display: flex; flex-direction: row;">
+        <div style="display: flex;position: absolute; top: 5px;left:5px;z-index: 100;">
+            <div style="display: flex;flex-direction: row">
+                <label class="dbox dhover" for="dbtniff">导入结果</label>
+                <input type="file" id="dbtniff" accept=".txt,.json" style="display: none;">
+            </div>
+        </div>
+        <div id="graph" style="width:100%; height:100vh"></div>
+    </div>
+    <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+    <script>
+        document.getElementById('dbtniff').addEventListener('change', function () {
+            const file = this.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const content = e.target.result;
+                    const fdata = JSON.parse(content);
+                    console.log(fdata);
+                    const nodes = getnode(fdata);
+                    const edges = getedge(fdata);
+                    const options = {
+                        nodes: {
+                            shape: "dot",
+                            size: 20,
+                            font: {
+                                color: "#000",
+                                size: 14
+                            }
+                        },
+                        configure: {
+                            enabled: true,
+                            filter: "nodes",
+                            showButton: true,
+                        },
+                        edges: {
+                            color: {
+                                color: '#999',
+                                highlight: '#2B7CE9',
+                                hover: '#2B7CE9',
+                            },
+                            physics: true,
+                        },
+                        physics: {
+                            enabled: true,
+                            barnesHut: {
+                                gravitationalConstant: -2000,   // 负得更大 → 排斥更强 → 更分散
+                                centralGravity: 0.1,             // 拉回中心的力，越小越散
+                                springLength: 400,               // 边的期望长度，越大越松
+                                springConstant: 0.002            // 弹簧劲度，越小越软
+                            },
+                            stabilization: {
+                                iterations: 200
+                            }
+                        }
+                    };
+                    let network = new vis.Network(document.getElementById("graph"), { nodes, edges }, options);
+                    network.on("click", function (params) {
+                        if (!params.nodes.length) {
+                            resetHighlight();
+                            return;
+                        }
+
+                        const selected = params.nodes[0];
+
+                        // 找出与该节点相连的节点
+                        const connectedNodes = network.getConnectedNodes(selected);
+                        const allNodes = nodes.get();
+
+                        // 重置所有节点样式
+                        let resnode = [];
+                        allNodes.forEach(n => {
+                            resnode.push({
+                                id: n.id,
+                                color: { background: "#cccccc" }   // 灰暗
+                            });
+                        });
+                        nodes.update(resnode);
+
+                        // 高亮选中节点
+                        nodes.update({
+                            id: selected,
+                            color: { background: "#ff8800" }     // 高亮
+                        });
+                        // 高亮相连节点
+                        let heightedNodes = [];
+                        connectedNodes.forEach(id => {
+                            heightedNodes.push({
+                                id,
+                                color: { background: "#A8B7CC" }  // 更暗的浅蓝色
+                            });
+                        });
+                        nodes.update(heightedNodes);
+                    });
+                    function resetHighlight() {
+                        const allNodes = nodes.get();
+                        let resnode = [];
+                        allNodes.forEach(n => {
+                            resnode.push({
+                                id: n.id,
+                                color: null   // 恢复默认外观
+                            });
+                        });
+                        nodes.update(resnode);
+                    }
+
+                    //                    const visc = document.getElementsByClassName('vis-configuration-wrapper')[0];
+                    //                    visc.style = "width: 900px; height: 100vh; overflow: auto;"
+                    //                    document.getElementById("dtop").appendChild(visc);
+                };
+                reader.readAsText(file);
+            }
+        });
+
+        function getnode(jsondata) {
+            const nodes = new vis.DataSet();
+            nodes.add({
+                id: 'me', label: '我', size: 60, x: 0, y: 0, fixed: { x: true, y: true }
+            });
+            for (const node of jsondata) {
+                const ml = node.mutuals.length
+                nodes.add({ id: node.user, label: node.displayname, size: 20 + ml });//节点大小与互粉数相关
+            }
+            return nodes;
+        }
+
+        function getedge(jsondata) {
+            let flist = [];
+            for (const node of jsondata) {
+                flist.push({ from: 'me', to: node.user });
+                for (const m of node.mutuals) {
+                    flist.push({ from: node.user, to: m.id });
+                }
+            }
+            flist = deduplicateEdges(flist);
+            const edges = new vis.DataSet();
+            edges.add(flist);
+            return edges;
+        }
+
+        function deduplicateEdges(flist) {
+            const seen = new Set();
+            const uniqueEdges = [];
+            for (const edge of flist) {
+                const sortedPair = [edge.from, edge.to].sort();
+                const key = sortedPair.join(',');
+                if (!seen.has(key)) {
+                    seen.add(key);
+                    uniqueEdges.push(edge);
+                }
+            }
+            return uniqueEdges;
+        }
+        // 示例数据
+    </script>
+
+</body>
+
+</html>
