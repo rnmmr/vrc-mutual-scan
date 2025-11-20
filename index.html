@@ -122,14 +122,14 @@
                         // 高亮选中节点
                         nodes.update({
                             id: selected,
-                            color: { background: "#ff8800" }     // 高亮
+                            color: { background: "#ff8800" }
                         });
                         // 高亮相连节点
                         let heightedNodes = [];
                         connectedNodes.forEach(id => {
                             heightedNodes.push({
                                 id,
-                                color: { background: "#A8B7CC" }  // 更暗的浅蓝色
+                                color: { background: "#97C2FC" }
                             });
                         });
                         nodes.update(heightedNodes);
