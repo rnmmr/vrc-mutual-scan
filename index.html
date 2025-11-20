@@ -41,7 +41,7 @@
 <body>
     <div id="dtop" style="display: flex; flex-direction: row;">
         <div style="display: flex;position: absolute; top: 5px;left:5px;z-index: 100;">
-            <div style="display: flex;flex-direction: row">
+            <div id="dinput" style="display: flex;flex-direction: row">
                 <label class="dbox dhover" for="dbtniff">导入结果</label>
                 <input type="file" id="dbtniff" accept=".txt,.json" style="display: none;">
             </div>
@@ -69,19 +69,31 @@
                                 size: 14
                             }
                         },
-                        configure: {
-                            enabled: true,
-                            filter: "nodes",
-                            showButton: true,
-                        },
+                        //configure: {
+                        //    enabled: true,
+                        //    filter: "physics",
+                        //    showButton: true,
+                        //},
                         edges: {
                             color: {
-                                color: '#999',
+                                color: '#bbb',
                                 highlight: '#2B7CE9',
                                 hover: '#2B7CE9',
                             },
                             physics: true,
                         },
+                        //physics: {
+                        //    solver: "barnesHut",
+                        //    stabilization: { iterations: 1200 },
+                        //    
+                        //    barnesHut: {
+                        //        gravitationalConstant: -7000,  // 斥力更强
+                        //        centralGravity: 0.25,          // 向中心吸引力
+                        //        springLength: 130,             // 回弹长度
+                        //        springConstant: 0.07,
+                        //        avoidOverlap: 1                // 节点之间不会贴脸
+                        //    }
+                        //},
                         physics: {
                             enabled: true,
                             barnesHut: {
@@ -91,10 +103,15 @@
                                 springConstant: 0.002            // 弹簧劲度，越小越软
                             },
                             stabilization: {
-                                iterations: 200
+                                iterations: 0
                             }
+                        },
+                        layout: {
+                            improvedLayout: true
                         }
                     };
+                    const dinput = document.getElementById("dinput");
+                    dinput.innerHTML = ""; // 清空之前的图形
                     let network = new vis.Network(document.getElementById("graph"), { nodes, edges }, options);
                     network.on("click", function (params) {
                         if (!params.nodes.length) {
@@ -113,22 +130,22 @@
                         allNodes.forEach(n => {
                             resnode.push({
                                 id: n.id,
-                                color: { background: "#cccccc" }   // 灰暗
+                                color: { background: "#cccccc", border: "#bbb" }   // 灰暗
                             });
                         });
                         nodes.update(resnode);
 
                         // 高亮选中节点
-                        nodes.update({
-                            id: selected,
-                            color: { background: "#ff8800" }
-                        });
+                        //nodes.update({
+                        //    id: selected,
+                        //    color: { background: "#ff8800" ,border: "#2B7CE9"}
+                        //});
                         // 高亮相连节点
                         let heightedNodes = [];
                         connectedNodes.forEach(id => {
                             heightedNodes.push({
                                 id,
-                                color: { background: "#97C2FC" }
+                                color: { background: "#97C2FC", border: "#2B7CE9" }   // 高亮颜色
                             });
                         });
                         nodes.update(heightedNodes);
@@ -145,9 +162,18 @@
                         nodes.update(resnode);
                     }
 
-                    //                    const visc = document.getElementsByClassName('vis-configuration-wrapper')[0];
-                    //                    visc.style = "width: 900px; height: 100vh; overflow: auto;"
+                    const visc = document.getElementsByClassName('vis-configuration-wrapper')[0];
+                    visc.style = "width: 600px; height: 100vh; overflow: auto; position: fixed; top:0px"
                     //                    document.getElementById("dtop").appendChild(visc);
+                    var observer = new MutationObserver(function (mutations) {
+                        mutations.forEach(function (mutation) {
+                            if (mutation.type === "childList") {
+                                const visc = document.getElementsByClassName('vis-configuration-wrapper')[0];
+                                visc.style = "width: 600px; height: 100vh; overflow: auto; position: fixed; top:0px"
+                            }
+                        });
+                    });
+                    observer.observe(document.body, { childList: true, subtree: true });
                 };
                 reader.readAsText(file);
             }
@@ -160,7 +186,8 @@
             });
             for (const node of jsondata) {
                 const ml = node.mutuals.length
-                nodes.add({ id: node.user, label: node.displayname, size: 20 + ml });//节点大小与互粉数相关
+//                console.log(ml);
+                nodes.add({ id: node.user, label: node.displayname, title : `${node.displayname},有${ml}位共同好友`, size: 20 + ml,mass:Math.log2(ml + 2)});//节点大小与互粉数相关
             }
             return nodes;
         }
@@ -198,4 +225,3 @@
 </body>
 
 </html>
-
