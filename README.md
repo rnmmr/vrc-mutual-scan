@@ -20,7 +20,8 @@ usr_12345678-1234-5678-1234-123456789012,mmr
 ### 查看关系网
 
 打开[好友关系网](https://rnmmr.github.io/vrc-mutual-scan/)，在左上角导入上一步导出的数据
-[备用链接](https://vrc-mutual-scan.mmmr.workers.dev/) 👀Gtihub Pages不知道为什么部署不了，懒得看了
+
+[备用链接](vms.ddddp.eu.org) 👀Gtihub Pages不知道为什么部署不了，懒得看了
 ## 已知问题
 
 与非好友的共同好友的机制还没写
