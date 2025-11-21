@@ -39,8 +39,8 @@
 </head>
 
 <body>
-    <div id="dtop" style="display: flex; flex-direction: row;">
-        <div style="display: flex;position: absolute; top: 5px;left:5px;z-index: 100;">
+    <div style="display: flex; flex-direction: row;">
+        <div id="dtop" style="display: flex;position: absolute; top: 5px;left:5px;z-index: 100;">
             <div id="dinput" style="display: flex;flex-direction: row">
                 <label class="dbox dhover" for="dbtniff">导入结果</label>
                 <input type="file" id="dbtniff" accept=".txt,.json" style="display: none;">
@@ -50,6 +50,9 @@
     </div>
     <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
     <script>
+        let nodes = null
+        let edges = null
+        let network = null
         document.getElementById('dbtniff').addEventListener('change', function () {
             const file = this.files[0];
             if (file) {
@@ -58,8 +61,8 @@
                     const content = e.target.result;
                     const fdata = JSON.parse(content);
                     console.log(fdata);
-                    const nodes = getnode(fdata);
-                    const edges = getedge(fdata);
+                    nodes = getnode(fdata);
+                    edges = getedge(fdata);
                     const options = {
                         nodes: {
                             shape: "dot",
@@ -110,21 +113,20 @@
                             improvedLayout: true
                         }
                     };
-                    const dinput = document.getElementById("dinput");
-                    dinput.innerHTML = ""; // 清空之前的图形
-                    let network = new vis.Network(document.getElementById("graph"), { nodes, edges }, options);
-                    network.on("click", function (params) {
+                    const dinput = document.getElementById("dtop");
+                    dinput.innerHTML = `<input id="dsearch" type="text" onkeydown="if(event.keyCode==13){searchnode(this.value)}" placeholder="搜索好友">`; // 清空之前的图形
+                    network = new vis.Network(document.getElementById("graph"), { nodes, edges }, options);
+                    network.on("select", function (params) {
                         if (!params.nodes.length) {
                             resetHighlight();
                             return;
                         }
-
-                        const selected = params.nodes[0];
-
+                        highlightnode(params.nodes[0])
+                    });
+                    function highlightnode(node) {
                         // 找出与该节点相连的节点
-                        const connectedNodes = network.getConnectedNodes(selected);
+                        const connectedNodes = network.getConnectedNodes(node);
                         const allNodes = nodes.get();
-
                         // 重置所有节点样式
                         let resnode = [];
                         allNodes.forEach(n => {
@@ -134,13 +136,6 @@
                             });
                         });
                         nodes.update(resnode);
-
-                        // 高亮选中节点
-                        //nodes.update({
-                        //    id: selected,
-                        //    color: { background: "#ff8800" ,border: "#2B7CE9"}
-                        //});
-                        // 高亮相连节点
                         let heightedNodes = [];
                         connectedNodes.forEach(id => {
                             heightedNodes.push({
@@ -149,7 +144,8 @@
                             });
                         });
                         nodes.update(heightedNodes);
-                    });
+                    }
+                    window.highlightnode = highlightnode;
                     function resetHighlight() {
                         const allNodes = nodes.get();
                         let resnode = [];
@@ -161,10 +157,8 @@
                         });
                         nodes.update(resnode);
                     }
-
                     const visc = document.getElementsByClassName('vis-configuration-wrapper')[0];
                     visc.style = "width: 600px; height: 100vh; overflow: auto; position: fixed; top:0px"
-                    //                    document.getElementById("dtop").appendChild(visc);
                     var observer = new MutationObserver(function (mutations) {
                         mutations.forEach(function (mutation) {
                             if (mutation.type === "childList") {
@@ -178,16 +172,35 @@
                 reader.readAsText(file);
             }
         });
+        function searchnode(id) {
+            let nodeId;
+            if (id.includes('usr_')) {
+                nodeId = nodes.getIds().find(nid => nid.toString() === id);
+            } else {
+                const match = nodes.get({
+                    filter: item => item.label && item.label.includes(id)
+                })[0];
+                nodeId = match ? match.id : null;
+            }
+            if (nodeId) {
+                network.selectNodes([nodeId]);
+                network.focus(nodeId, { scale: 1, animation: true });
+                highlightnode(nodeId)
+            } else {
+                alert("未找到该节点");
+            }
+        }
 
         function getnode(jsondata) {
+            let num = jsondata.length
             const nodes = new vis.DataSet();
             nodes.add({
-                id: 'me', label: '我', size: 60, x: 0, y: 0, fixed: { x: true, y: true }
+                id: 'me', label: '我', size: 20 + num, x: 0, y: 0, mass: Math.log2(num + 2), fixed: { x: true, y: true }
             });
             for (const node of jsondata) {
                 const ml = node.mutuals.length
-//                console.log(ml);
-                nodes.add({ id: node.user, label: node.displayname, title : `${node.displayname},有${ml}位共同好友`, size: 20 + ml,mass:Math.log2(ml + 2)});//节点大小与互粉数相关
+                //                console.log(ml);
+                nodes.add({ id: node.user, label: node.displayname, title: `${node.displayname},有${ml}位共同好友`, size: 20 + ml, mass: Math.log2(ml + 2) });//节点大小与互粉数相关
             }
             return nodes;
         }
