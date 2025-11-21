@@ -74,7 +74,7 @@
                         },
                         //configure: {
                         //    enabled: true,
-                        //    filter: "physics",
+                        //    filter: "interaction",
                         //    showButton: true,
                         //},
                         edges: {
@@ -111,7 +111,10 @@
                         },
                         layout: {
                             improvedLayout: true
-                        }
+                        },
+                        //interaction: {
+                        //    zoomSpeed: 0.5  // 默认是 1，改小变丝滑
+                        //}
                     };
                     const dinput = document.getElementById("dtop");
                     dinput.innerHTML = `<input id="dsearch" type="text" onkeydown="if(event.keyCode==13){searchnode(this.value)}" placeholder="搜索好友">`; // 清空之前的图形
@@ -157,17 +160,17 @@
                         });
                         nodes.update(resnode);
                     }
-                    const visc = document.getElementsByClassName('vis-configuration-wrapper')[0];
-                    visc.style = "width: 600px; height: 100vh; overflow: auto; position: fixed; top:0px"
-                    var observer = new MutationObserver(function (mutations) {
-                        mutations.forEach(function (mutation) {
-                            if (mutation.type === "childList") {
-                                const visc = document.getElementsByClassName('vis-configuration-wrapper')[0];
-                                visc.style = "width: 600px; height: 100vh; overflow: auto; position: fixed; top:0px"
-                            }
-                        });
-                    });
-                    observer.observe(document.body, { childList: true, subtree: true });
+                    //const visc = document.getElementsByClassName('vis-configuration-wrapper')[0];
+                    //visc.style = "width: 600px; height: 100vh; overflow: auto; position: fixed; top:0px"
+                    //var observer = new MutationObserver(function (mutations) {
+                    //    mutations.forEach(function (mutation) {
+                    //        if (mutation.type === "childList") {
+                    //            const visc = document.getElementsByClassName('vis-configuration-wrapper')[0];
+                    //            visc.style = "width: 600px; height: 100vh; overflow: auto; position: fixed; top:0px"
+                    //        }
+                    //    });
+                    //});
+                    //observer.observe(document.body, { childList: true, subtree: true });
                 };
                 reader.readAsText(file);
             }
