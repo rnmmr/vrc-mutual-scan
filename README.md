@@ -1,5 +1,5 @@
 # vrc-mutual-scan
-批量扫描共同好友并导出的[油猴](https://microsoftedge.microsoft.com/addons/detail/iikmkjmpaadaobahmlepeloendndfphd)脚本
+批量扫描共同好友并导出的[油猴](https://microsoftedge.microsoft.com/addons/detail/iikmkjmpaadaobahmlepeloendndfphd)脚本 需要在 [chrome://extensions/](chrome://extensions/) 打开开发者模式
 [安装](https://github.com/rnmmr/vrc-mutual-scan/raw/refs/heads/main/vrc-mutual-scan.user.js)
 
 ## 如何使用
@@ -11,6 +11,7 @@
 ```
 UserID,DisplayName
 usr_12345678-1234-5678-1234-123456789012,mmr
+usr_87654321-8765-4321-8765-098765432109,rmm
 ```
 
 ### 2.打开VRC官网使用油猴插件导出共同好友数据
