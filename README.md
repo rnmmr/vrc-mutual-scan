@@ -1,6 +1,8 @@
 # vrc-mutual-scan
-批量扫描共同好友并导出的[油猴](https://microsoftedge.microsoft.com/addons/detail/iikmkjmpaadaobahmlepeloendndfphd)脚本 需要在 [chrome://extensions/](chrome://extensions/) 打开开发者模式
-[安装](https://github.com/rnmmr/vrc-mutual-scan/raw/refs/heads/main/vrc-mutual-scan.user.js)
+批量扫描共同好友并导出的[油猴](https://microsoftedge.microsoft.com/addons/detail/iikmkjmpaadaobahmlepeloendndfphd)脚本 先[安装油猴](https://microsoftedge.microsoft.com/addons/detail/iikmkjmpaadaobahmlepeloendndfphd)，需要在 [chrome://extensions/](chrome://extensions/) 打开开发者模式
+
+
+然后再点击这里安装[安装脚本](https://github.com/rnmmr/vrc-mutual-scan/raw/refs/heads/main/vrc-mutual-scan.user.js)
 
 ## 如何使用
 
