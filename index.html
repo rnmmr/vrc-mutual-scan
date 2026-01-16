@@ -11,6 +11,7 @@
             padding: 0;
             height: 100vh;
             font-family: Arial, sans-serif;
+            background-color:#222
         }
 
         .dbox {
@@ -45,6 +46,7 @@
                 <label class="dbox dhover" for="dbtniff">导入结果</label>
                 <input type="file" id="dbtniff" accept=".txt,.json" style="display: none;">
             </div>
+            <div style="color: white;padding-left: 5px;"><input type="checkbox" id="displayme">显示自己 （会导致全部人被自己拉住，相比更加混乱（全体目光向我看齐），更难看清一些好友结构）</div>
         </div>
         <div id="graph" style="width:100%; height:100vh"></div>
     </div>
@@ -61,16 +63,18 @@
                     const content = e.target.result;
                     const fdata = JSON.parse(content);
                     console.log(fdata);
-                    nodes = getnode(fdata);
-                    edges = getedge(fdata);
+                    const displayme = document.getElementById("displayme").checked;
+                    nodes = getnode(fdata,displayme);
+                    edges = getedge(fdata,displayme);
                     const options = {
+                        autoResize:true,
                         nodes: {
                             shape: "dot",
                             size: 20,
                             font: {
-                                color: "#000",
-                                size: 14
-                            }
+                                color: "#eee",
+                                size: 25,
+                            },
                         },
                         //configure: {
                         //    enabled: true,
@@ -85,10 +89,9 @@
                             },
                             physics: true,
                         },
-                        //physics: {
+                        // physics: { //GPT写的
                         //    solver: "barnesHut",
                         //    stabilization: { iterations: 1200 },
-                        //    
                         //    barnesHut: {
                         //        gravitationalConstant: -7000,  // 斥力更强
                         //        centralGravity: 0.25,          // 向中心吸引力
@@ -96,17 +99,31 @@
                         //        springConstant: 0.07,
                         //        avoidOverlap: 1                // 节点之间不会贴脸
                         //    }
-                        //},
-                        physics: {
+                        // },
+                        // physics: { //我写的
+                        //     enabled: true,
+                        //     barnesHut: {
+                        //         gravitationalConstant: -2000,   // 负得更大 → 排斥更强 → 更分散
+                        //         centralGravity: 0,             // 拉回中心的力，越小越散
+                        //         springLength: 400,               // 边的期望长度，越大越松
+                        //         springConstant: 0.002            // 弹簧劲度，越小越软
+                        //     },
+                        //     stabilization: {
+                        //         iterations: 0,
+                        //         fit: false
+                        //     }
+                        // },
+                        physics: { //豆包写的
                             enabled: true,
                             barnesHut: {
-                                gravitationalConstant: -2000,   // 负得更大 → 排斥更强 → 更分散
-                                centralGravity: 0.1,             // 拉回中心的力，越小越散
-                                springLength: 400,               // 边的期望长度，越大越松
-                                springConstant: 0.002            // 弹簧劲度，越小越软
+                                gravitationalConstant: -4000,   // 负得更大 → 排斥更强 → 更分散
+                                centralGravity: 0,             // 拉回中心的力，越小越散
+                                springLength: 100,               // 边的期望长度，越大越松
+                                springConstant: 0.01,            // 弹簧劲度，越小越软
                             },
                             stabilization: {
-                                iterations: 0
+                                iterations: 0,
+                                fit: false
                             }
                         },
                         layout: {
@@ -117,8 +134,14 @@
                         //}
                     };
                     const dinput = document.getElementById("dtop");
-                    dinput.innerHTML = `<input id="dsearch" type="text" onkeydown="if(event.keyCode==13){searchnode(this.value)}" placeholder="搜索好友">`; // 清空之前的图形
+                    dinput.innerHTML = `<input id="dsearch" type="text" style="border-radius: 10px; background-color: #3b3b3b; padding: 5px; border: solid #7a7a7a; color: #fff;"onkeydown="if(event.keyCode==13){searchnode(this.value)}" placeholder="搜索好友">`; // 清空之前的图形
                     network = new vis.Network(document.getElementById("graph"), { nodes, edges }, options);
+                    network.moveTo({
+                        position: { x: 0, y: 0 }, scale: 0.2, animation: {
+                            duration: 1000,
+                            easingFunction: "easeOutCubic"
+                        }
+                    });
                     network.on("select", function (params) {
                         if (!params.nodes.length) {
                             resetHighlight();
@@ -135,7 +158,7 @@
                         allNodes.forEach(n => {
                             resnode.push({
                                 id: n.id,
-                                color: { background: "#cccccc", border: "#bbb" }   // 灰暗
+                                color: { background: "#777", border: "#666" }   // 灰暗
                             });
                         });
                         nodes.update(resnode);
@@ -160,6 +183,13 @@
                         });
                         nodes.update(resnode);
                     }
+                    network.on("doubleClick", function (params) {
+                        if (!params.nodes.length) return;
+                        const nodeId = params.nodes[0];
+                        if (!nodeId || nodeId === 'me') return;
+                        const uri = `vrcx://user/${encodeURIComponent(nodeId)}`;
+                        window.open(uri, "_self");
+                    });
                     //const visc = document.getElementsByClassName('vis-configuration-wrapper')[0];
                     //visc.style = "width: 600px; height: 100vh; overflow: auto; position: fixed; top:0px"
                     //var observer = new MutationObserver(function (mutations) {
@@ -194,24 +224,26 @@
             }
         }
 
-        function getnode(jsondata) {
+        function getnode(jsondata,displayme=true) {
             let num = jsondata.length
             const nodes = new vis.DataSet();
-            nodes.add({
-                id: 'me', label: '我', size: 20 + num, x: 0, y: 0, mass: Math.log2(num + 2), fixed: { x: true, y: true }
+            if (displayme) nodes.add({
+                id: 'me', label: '我', size: 80, x: 0, y: 0, mass: Math.log2(num + 2), fixed: { x: true, y: true }
             });
             for (const node of jsondata) {
                 const ml = node.mutuals.length
-                //                console.log(ml);
-                nodes.add({ id: node.user, label: node.displayname, title: `${node.displayname},有${ml}位共同好友`, size: 20 + ml, mass: Math.log2(ml + 2) });//节点大小与互粉数相关
+                // console.log(ml);
+                if (ml !== 0)
+                    nodes.add({ id: node.user, label: node.displayname, title: `${node.displayname},有${ml}位共同好友`, size: 20 + ml, mass: Math.log2(ml + 2) });//节点大小与互粉数相关
             }
             return nodes;
         }
 
-        function getedge(jsondata) {
+        function getedge(jsondata,displayme=true) {
             let flist = [];
             for (const node of jsondata) {
-                flist.push({ from: 'me', to: node.user });
+                if (displayme)
+                    flist.push({ from: 'me', to: node.user });
                 for (const m of node.mutuals) {
                     flist.push({ from: node.user, to: m.id });
                 }
@@ -235,7 +267,6 @@
             }
             return uniqueEdges;
         }
-        // 示例数据
     </script>
 
 </body>
