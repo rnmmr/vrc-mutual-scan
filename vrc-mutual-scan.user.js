@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         vrc-mutuals-scanner
 // @namespace    http://tampermonkey.net/
-// @version      0.1.0
+// @version      0.1.1
 // @description  扫描共同好友并保存
 // @author       mmr
 // @match        https://vrchat.com/home
@@ -157,7 +157,7 @@ async function getfl() {
     let fm = [];
     let offset = 0;
     while (offset >= 0) {
-        await new Promise(r => setTimeout(r, 2000));
+        await new Promise(r => setTimeout(r, 1000));
         mpf = false;
         const res = await fetch(`https://vrchat.com/api/1/auth/user/friends?n=100&offline=false&offset=${offset}`, {
             method: 'GET',
@@ -173,7 +173,7 @@ async function getfl() {
     }
     offset = 0;
     while (offset >= 0) {
-        await new Promise(r => setTimeout(r, 2000));
+        await new Promise(r => setTimeout(r, 1000));
         mpf = false;
         const res = await fetch(`https://vrchat.com/api/1/auth/user/friends?n=100&offline=true&offset=${offset}`, {
             method: 'GET',
